@@ -1,5 +1,5 @@
-import os
 import httpx
+from typing import Optional
 from fastapi import HTTPException
 from application.port.outbound.media_port import MediaPort
 from domain.model.media_model import MediaInfo
@@ -8,27 +8,20 @@ class MediaAdapter(MediaPort):
 
     def __init__(self, base_url: str = "http://darami.life:3002"):
         self.base_url = base_url
-        self.access_token = os.getenv("GMS_ACCESS_TOKEN")
 
-        # Debug: Check if token is loaded
-        if not self.access_token:
-            print("WARNING: GMS_ACCESS_TOKEN is not set in environment variables")
-        else:
-            print(f"SUCCESS: GMS_ACCESS_TOKEN loaded (length: {len(self.access_token)})")
-
-    async def get_media_info(self, media_id: str) -> MediaInfo:
+    async def get_media_info(self, media_id: str, token: Optional[str] = None) -> MediaInfo:
         """Get media information from media API"""
         url = f"{self.base_url}/api/media"
         headers = {}
 
-        # Add authorization header with JWT token
-        if self.access_token:
-            headers["Authorization"] = f"Bearer {self.access_token}"
+        # Add authorization header with JWT token from request
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
             print(f"DEBUG: Sending request to {url}")
             print(f"DEBUG: Looking for mediaId={media_id}")
-            print(f"DEBUG: Authorization header present: {bool(headers.get('Authorization'))}")
+            print(f"DEBUG: Using token from request header (length: {len(token)})")
         else:
-            print("ERROR: No access token available for media API request")
+            print("WARNING: No token provided for media API request")
 
         try:
             async with httpx.AsyncClient(timeout=10) as client:

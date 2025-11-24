@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional
@@ -23,6 +23,7 @@ vqa_router = APIRouter()
 @vqa_router.post("/", response_class=JSONResponse)
 async def handle_vqa(
     request_dto: VQARequestDTO,
+    authorization: Optional[str] = Header(None),
     vqa_service: VQAUseCase = Depends(get_vqa_service),
     llm_port: LLMPort = Depends(get_llm_adapter),
     language_detection_port: LanguageDetectionPort = Depends(get_language_detection_adapter)
@@ -30,6 +31,12 @@ async def handle_vqa(
     """
     이미지(media) 없으면 LLM 직접 질의, 있으면 VQA → LLM 설명 생성
     """
+    # Extract token from Authorization header
+    token = None
+    if authorization:
+        # Remove "Bearer " prefix if present
+        token = authorization.replace("Bearer ", "").strip()
+        print(f"DEBUG: Received token from header (length: {len(token)})")
     # Extract keywords from question
     keywords = extract_keywords_from_text(request_dto.question)
     lang = language_detection_port.detect_language(request_dto.question)
@@ -56,7 +63,8 @@ async def handle_vqa(
         request = VQARequest(
             image_url=request_dto.media_id,
             question=request_dto.question,
-            child_name=request_dto.child_name
+            child_name=request_dto.child_name,
+            token=token
         )
         response: VQAResponse = await vqa_service.handle_vqa(request)
 

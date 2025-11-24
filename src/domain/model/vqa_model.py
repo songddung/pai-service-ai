@@ -5,6 +5,7 @@ class VQARequest(BaseModel):
     image_url: str
     question: str
     child_name: Optional[str]
+    token: Optional[str] = None
 
 class VQAResponse(BaseModel):
     answer: str

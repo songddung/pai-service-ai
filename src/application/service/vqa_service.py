@@ -45,8 +45,8 @@ class VQAService(VQAUseCase):
         keywords = extract_keywords_from_text(request.question)
 
         try:
-            # Get media info from media API
-            media_info = await self.media_port.get_media_info(request.image_url)
+            # Get media info from media API using token from request
+            media_info = await self.media_port.get_media_info(request.image_url, request.token)
             cdn_url = media_info.cdnUrl
 
             # Download image from CDN URL
