@@ -1,0 +1,57 @@
+# -- Unified Dependencies (Linux Target) --
+
+# 1. Web Framework & Server
+fastapi==0.116.1
+uvicorn==0.35.0
+python-multipart # For file uploads
+requests # For HTTP API calls to media-service
+
+# 2. Core AI/ML Libraries
+# Using newer versions from TTS project as the baseline.
+torch==2.6.0
+torchaudio==2.6.0
+torchvision==0.21.0
+transformers==4.49.0
+
+# 3. VQA-specific Libraries
+Pillow==10.2.0
+deep-translator
+opencv-python
+ultralytics
+python-dotenv
+
+# 4. TTS-specific Libraries
+anyio==4.8.0
+gradio==5.16.0
+httpx==0.28.1
+huggingface-hub==0.28.1
+numpy==2.2.6
+safetensors==0.5.3
+soundfile==0.13.1
+einops
+ninja
+inflect
+kanjize
+phonemizer
+sudachipy
+sudachidict_full
+elevenlabs
+langdetect
+# 5. Complex TTS Dependencies (Using pre-compiled Linux wheels)
+# IMPORTANT: Install in this specific order.
+# There is a potential version conflict here: torch is 2.6.0, but some wheels are for 2.4.
+# We are proceeding as per the original requirements file.
+
+# flash-attn (for torch 2.6 on linux)
+#https://github.com/Dao-AILab/flash-attention/releases/download/v2.7.2.post1/flash_attn-2.7.2.post1+cu12torch2.6cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+
+# causal-conv1d (for torch 2.4)
+#https://github.com/Dao-AILab/causal-conv1d/releases/download/v1.5.0.post8/causal_conv1d-1.5.0.post8+cu12torch2.4cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+
+# mamba-ssm (for torch 2.4)
+
+#https://github.com/state-spaces/mamba/releases/download/v2.2.4/mamba_ssm-2.2.4+cu12torch2.4cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+
+
+# Zonos model from git
+#zonos @ git+https://github.com/Zyphra/Zonos.git
