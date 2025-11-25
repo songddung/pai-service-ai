@@ -2,14 +2,11 @@ from fastapi import APIRouter, File, UploadFile, Form, Depends
 from fastapi.responses import StreamingResponse, Response
 from typing import List
 
-from application.service.tts_service import TTSService
 from application.port.inbound.tts_use_case import TTSUseCase
 from domain.model.tts_model import GuideScriptsResponse, VoiceProfileResponse, VoiceProfileItem, TTSRequest, StreamTTSRequest, DeleteVoiceProfileRequest
+from adapter.inbound.web.dependencies import get_tts_service
 
 tts_router = APIRouter()
-
-def get_tts_service() -> TTSUseCase:
-    return TTSService()
 
 @tts_router.get("/voice-profiles/scripts", response_model=GuideScriptsResponse)
 def get_guide_scripts(tts_service: TTSUseCase = Depends(get_tts_service)):

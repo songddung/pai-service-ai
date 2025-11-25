@@ -1,17 +1,20 @@
 import sys
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 # This will be adjusted to the new structure
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__))))
 
 from fastapi import FastAPI
 
-# Import routers and model loaders from the new structure
+# Import routers from the new structure
 from adapter.inbound.web.tts_controller import tts_router
 from adapter.inbound.web.vqa_controller import vqa_router
 from adapter.inbound.web.recommend_controller import recommend_router
-from application.service.tts_service import load_tts_model
-from application.service.vqa_service import load_vqa_models
+from adapter.inbound.web.dependencies import get_yolo_service, get_vilt_service, get_tts_adapter
 
 
 app = FastAPI(
@@ -24,9 +27,18 @@ app = FastAPI(
 def on_startup():
     """Load all AI models on server startup."""
     print("--- Server startup sequence initiated ---")
-    # Load models for each module sequentially
-    load_tts_model()
-    load_vqa_models()
+    # Initialize models eagerly for better performance
+    print("--- TTS Module Loading ---")
+    try:
+        get_tts_adapter()
+        print("--- TTS Module Loaded ---")
+    except Exception as e:
+        print(f"Warning: TTS adapter initialization failed: {e}")
+
+    print("--- VQA Module Loading ---")
+    get_yolo_service()
+    get_vilt_service()
+    print("--- VQA Module Loaded ---")
     print("--- All models loaded. Server startup complete. ---")
 
 
