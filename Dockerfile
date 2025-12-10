@@ -4,7 +4,7 @@ FROM python:3.10-slim as base
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies including Rust for sudachipy
 RUN apt-get update && apt-get install -y \
     git \
     build-essential \
@@ -14,7 +14,12 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender-dev \
     libgomp1 \
+    curl \
+    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
     && rm -rf /var/lib/apt/lists/*
+
+# Add Rust to PATH
+ENV PATH="/root/.cargo/bin:${PATH}"
 
 # Copy requirements first for better caching
 COPY requirements.txt .
