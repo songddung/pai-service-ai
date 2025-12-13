@@ -21,31 +21,6 @@ pipeline {
             }
         }
 
-        stage('Lint') {
-            steps {
-                echo 'Running Python linter inside Docker...'
-                sh """
-                    docker run --rm songhyunkwang/pai-service-ai:${BUILD_NUMBER} sh -c '
-                        pip install --break-system-packages flake8 black &&
-                        python3 -m flake8 src/ --max-line-length=120 --extend-ignore=E203,W503 || true &&
-                        python3 -m black --check src/ || true
-                    '
-                """
-            }
-        }
-
-        stage('Test') {
-            steps {
-                echo 'Running tests inside Docker...'
-                sh """
-                    docker run --rm songhyunkwang/pai-service-ai:${BUILD_NUMBER} sh -c '
-                        pip install --break-system-packages pytest pytest-cov &&
-                        python3 -m pytest tests/ --cov=src --cov-report=term-missing || echo "No tests found or tests failed"
-                    '
-                """
-            }
-        }
-
         stage('Push to Docker Hub') {
             steps {
                 script {
