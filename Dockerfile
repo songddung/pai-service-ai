@@ -25,8 +25,7 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 COPY requirements.txt .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Install flash-attention, causal-conv1d, mamba-ssm (commented out wheels from requirements.txt)
 # Uncomment and modify these if needed for your specific torch version
