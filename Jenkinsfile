@@ -23,7 +23,6 @@ pipeline {
             steps {
                 echo 'Installing Python dependencies...'
                 sh '''
-                    pip3 install --break-system-packages --upgrade pip
                     pip3 install --break-system-packages -r requirements.txt
                 '''
             }
