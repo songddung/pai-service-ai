@@ -9,23 +9,12 @@ pipeline {
             }
         }
 
-        stage('Setup Python Environment') {
-            steps {
-                echo 'Setting up Python virtual environment...'
-                sh '''
-                    python3 -m venv venv
-                    . venv/bin/activate
-                    pip install --upgrade pip
-                '''
-            }
-        }
-
         stage('Install Dependencies') {
             steps {
                 echo 'Installing Python dependencies...'
                 sh '''
-                    . venv/bin/activate
-                    pip install -r requirements.txt
+                    pip3 install --user --upgrade pip
+                    pip3 install --user -r requirements.txt
                 '''
             }
         }
@@ -34,10 +23,9 @@ pipeline {
             steps {
                 echo 'Running Python linter...'
                 sh '''
-                    . venv/bin/activate
-                    pip install flake8 black
-                    flake8 src/ --max-line-length=120 --extend-ignore=E203,W503 || true
-                    black --check src/ || true
+                    pip3 install --user flake8 black
+                    python3 -m flake8 src/ --max-line-length=120 --extend-ignore=E203,W503 || true
+                    python3 -m black --check src/ || true
                 '''
             }
         }
@@ -46,9 +34,8 @@ pipeline {
             steps {
                 echo 'Running tests...'
                 sh '''
-                    . venv/bin/activate
-                    pip install pytest pytest-cov
-                    pytest tests/ --cov=src --cov-report=term-missing || echo "No tests found or tests failed"
+                    pip3 install --user pytest pytest-cov
+                    python3 -m pytest tests/ --cov=src --cov-report=term-missing || echo "No tests found or tests failed"
                 '''
             }
         }
