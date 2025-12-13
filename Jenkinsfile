@@ -9,12 +9,22 @@ pipeline {
             }
         }
 
+        stage('Setup Python') {
+            steps {
+                echo 'Installing Python and pip...'
+                sh '''
+                    apt-get update
+                    apt-get install -y python3 python3-pip python3-venv
+                '''
+            }
+        }
+
         stage('Install Dependencies') {
             steps {
                 echo 'Installing Python dependencies...'
                 sh '''
-                    pip3 install --user --upgrade pip
-                    pip3 install --user -r requirements.txt
+                    pip3 install --break-system-packages --upgrade pip
+                    pip3 install --break-system-packages -r requirements.txt
                 '''
             }
         }
@@ -23,7 +33,7 @@ pipeline {
             steps {
                 echo 'Running Python linter...'
                 sh '''
-                    pip3 install --user flake8 black
+                    pip3 install --break-system-packages flake8 black
                     python3 -m flake8 src/ --max-line-length=120 --extend-ignore=E203,W503 || true
                     python3 -m black --check src/ || true
                 '''
@@ -34,7 +44,7 @@ pipeline {
             steps {
                 echo 'Running tests...'
                 sh '''
-                    pip3 install --user pytest pytest-cov
+                    pip3 install --break-system-packages pytest pytest-cov
                     python3 -m pytest tests/ --cov=src --cov-report=term-missing || echo "No tests found or tests failed"
                 '''
             }
