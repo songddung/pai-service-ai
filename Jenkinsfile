@@ -1,5 +1,39 @@
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    jenkins: agent
+  namespace: jenkins
+spec:
+  serviceAccountName: jenkins
+  containers:
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
+    command:
+    - /busybox/cat
+    tty: true
+    volumeMounts:
+    - name: docker-config
+      mountPath: /kaniko/.docker
+  volumes:
+  - name: docker-config
+    secret:
+      secretName: dockerhub-regcred
+      items:
+      - key: .dockerconfigjson
+        path: config.json
+"""
+        }
+    }
+
+    environment {
+        IMAGE_NAME = 'songhyunkwang/pai-service-ai'
+        IMAGE_TAG = "${BUILD_NUMBER}"
+    }
 
     stages {
         stage('Checkout') {
@@ -9,27 +43,23 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build and Push with Kaniko') {
             steps {
-                script {
-                    echo 'Building Docker image...'
-                    // Build once with BUILD_NUMBER tag
-                    sh "docker build -t songhyunkwang/pai-service-ai:${BUILD_NUMBER} ."
-                    // Add latest tag to the same image
-                    sh "docker tag songhyunkwang/pai-service-ai:${BUILD_NUMBER} songhyunkwang/pai-service-ai:latest"
-                }
-            }
-        }
+                container('kaniko') {
+                    script {
+                        echo "Building and pushing image: ${IMAGE_NAME}:${IMAGE_TAG}"
 
-        stage('Push to Docker Hub') {
-            steps {
-                script {
-                    echo 'Pushing Docker image to Docker Hub...'
-                    // Login to Docker Hub and push images
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                        sh "docker push songhyunkwang/pai-service-ai:${BUILD_NUMBER}"
-                        sh "docker push songhyunkwang/pai-service-ai:latest"
+                        // Kaniko는 빌드와 푸시를 동시에 수행
+                        sh """
+                            /kaniko/executor \
+                              --context=\${WORKSPACE} \
+                              --dockerfile=\${WORKSPACE}/Dockerfile \
+                              --destination=${IMAGE_NAME}:${IMAGE_TAG} \
+                              --destination=${IMAGE_NAME}:latest \
+                              --cache=true \
+                              --cache-ttl=24h \
+                              --compressed-caching=false
+                        """
                     }
                 }
             }
@@ -39,19 +69,11 @@ pipeline {
     post {
         success {
             echo 'Pipeline completed successfully!'
-            echo "Docker image pushed: songhyunkwang/pai-service-ai:${BUILD_NUMBER}"
+            echo "Docker image pushed: ${IMAGE_NAME}:${IMAGE_TAG}"
+            echo "Docker image pushed: ${IMAGE_NAME}:latest"
         }
         failure {
             echo 'Pipeline failed!'
-        }
-        always {
-            // Cleanup: remove Docker images to save space
-            sh "docker rmi songhyunkwang/pai-service-ai:${BUILD_NUMBER} || true"
-            sh "docker rmi songhyunkwang/pai-service-ai:latest || true"
-            // Remove dangling images (untagged <none> images)
-            sh "docker image prune -f || true"
-            // Clean workspace
-            cleanWs()
         }
     }
 }
